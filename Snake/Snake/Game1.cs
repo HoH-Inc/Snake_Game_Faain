@@ -17,6 +17,12 @@ public class Game1 : Game
     private Point food;
     private Random random;
     
+    //adding a text and score
+    private SpriteFont font;
+    private int score = 0;
+    private int borderThickness = 4;
+    private int scoreAreaHeight = 40;
+    
     private List<Point> snake;
     private Point direction;
     
@@ -35,6 +41,7 @@ public class Game1 : Game
     private void ResetGame() //resets game, delete previous snake, reset snake in start position, and add a food
     {
         snake.Clear();
+        score = 0;
         snake.Add(new Point(10, 10));
         snake.Add(new Point(9, 10));
         snake.Add(new Point(8, 10));
@@ -46,8 +53,8 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        _graphics.PreferredBackBufferWidth = gridWidth * tileSize;                                                                                                                       
-        _graphics.PreferredBackBufferHeight = gridHeight * tileSize;                                                                                                                     
+        _graphics.PreferredBackBufferWidth = gridWidth * tileSize + borderThickness * 2;
+        _graphics.PreferredBackBufferHeight = gridHeight * tileSize + borderThickness * 2 + scoreAreaHeight;                                                                                                                    
         _graphics.ApplyChanges();
         
         //food
@@ -68,6 +75,8 @@ public class Game1 : Game
 
     protected override void LoadContent()
     {
+        font = Content.Load<SpriteFont>("font"); //loading font
+        
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
         pixel = new Texture2D(GraphicsDevice, 1, 1);
@@ -124,6 +133,7 @@ public class Game1 : Game
             //respawn after eating food
             if (newHead == food)
             {
+                score++;
                 SpawnFood();
             }
             else
@@ -143,21 +153,34 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.Black);
         _spriteBatch.Begin();
+        
+        //border (4 rectangles)
+        int gw = gridWidth * tileSize;
+        int gh = gridHeight * tileSize;
+        int bt = borderThickness;
+        int sa = scoreAreaHeight;
+        _spriteBatch.Draw(pixel, new Rectangle(0, sa, gw + bt * 2, bt), Color.White);            // top
+        _spriteBatch.Draw(pixel, new Rectangle(0, sa + bt + gh, gw + bt * 2, bt), Color.White);  // bottom
+        _spriteBatch.Draw(pixel, new Rectangle(0, sa, bt, gh + bt * 2), Color.White);            // left
+        _spriteBatch.Draw(pixel, new Rectangle(bt + gw, sa, bt, gh + bt * 2), Color.White);      // right
+
+        // snake (offset by border + score area)
         foreach (var point in snake)
         {
-            _spriteBatch.Draw(pixel, new Rectangle(point.X * tileSize, point.Y * tileSize, tileSize, tileSize), Color.Green);
-            
+            _spriteBatch.Draw(pixel,
+                new Rectangle(bt + point.X * tileSize, sa + bt + point.Y * tileSize, tileSize, tileSize),
+                Color.Green);
         }
-        
-        //food
-        _spriteBatch.Draw(pixel, new Rectangle(food.X * tileSize, food.Y *tileSize, tileSize, tileSize), Color.Red);
-        
+
+        // food
+        _spriteBatch.Draw(pixel,
+            new Rectangle(bt + food.X * tileSize, sa + bt + food.Y * tileSize, tileSize, tileSize),
+            Color.Red);
+
+        // score text (above the border)
+        _spriteBatch.DrawString(font, $"Score: {score}", new Vector2(8, 8), Color.White);
+
         _spriteBatch.End();
         base.Draw(gameTime);
-        
-        
-        
-
-        // TODO: Add your drawing code here
     }
 }
